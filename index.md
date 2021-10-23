@@ -1,16 +1,23 @@
-## Welcome to GitHub Pages
+## Welcome to my extremely interesting and useful Website
 
-You can use the [editor on GitHub](https://github.com/frederikho/js_tools/edit/gh-pages/index.md) to maintain and preview the content for your website in Markdown files.
+I have developed some scripts for everyone to enjoy them. Have a look and enjoy. 
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+My first script in javascript is the following: [Link]. 
+
+
+
+<script src="{{ base.url | prepend: site.url }}/p5/p5.min.js"></script>
+<script src="{{ base.url | prepend: site.url }}/p5/addons/p5.sound.min.js"></script>
+<script src="{{ base.url | prepend: site.url }}/boid.js"></script>
+<script src="{{ base.url | prepend: site.url }}/sketch.js"></script>
+
+
 
 ### Markdown
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
+This page has been created in Markdown. Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for Syntax highlighted code block. Here is an example:
 
 ```markdown
-Syntax highlighted code block
-
 # Header 1
 ## Header 2
 ### Header 3
@@ -28,10 +35,10 @@ Syntax highlighted code block
 
 For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
 
-### Jekyll Themes
+### Jekyll and gitHub
 
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/frederikho/js_tools/settings/pages). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
+This page has been constructed with the help of [Jekyll](https://jekyllrb.com/). It is hosted on [GitHub](github.org). 
 
 ### Support or Contact
 
-Having trouble with Pages? Check out our [documentation](https://docs.github.com/categories/github-pages-basics/) or [contact support](https://support.github.com/contact) and we’ll help you sort it out.
+Having trouble? Check out [Wikipedia](https://wikipedia.org/), also an extremely useful website. Or contact our [customer support](mailto:customer_support@nsa.org) and we’ll not (!) help you sort it out.
