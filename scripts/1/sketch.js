@@ -2,7 +2,7 @@
 const flock = [];
 
 function setup () {
-    createCanvas(1240,660);
+    createCanvas(window.innerWidth,window.innerHeight);
     for (let i = 0; i < 20; i++){
         flock.push(new Boid());
     }
@@ -19,6 +19,10 @@ function draw () {
         boid.show();
     }
 
+}
+
+function getRandomVal (randomSeed, min, max) {
+    return min + (randomSeed * (max-min));
 }
 
 setup()
