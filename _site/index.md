@@ -2,7 +2,7 @@
 
 I have developed some scripts for everyone to enjoy them. Have a look and enjoy. 
 
-My first script in javascript is the following: [Link]. 
+My first script in javascript is the following: [Link](universe.html). 
 
 
 
