@@ -14,7 +14,6 @@ class Boid {
 		this.acceleration = createVector();
 		this.size = 12;
 		this.color = color(random(110, 255),51,51); // Rottöne, not aligned with random
-		this.maxForce = 0.4;
 		this.maxSpeed = 3; 	
 		
 		this.initPerceptionRadius = 60;
@@ -38,23 +37,41 @@ class Boid {
 
 		let perceptionRadius = 25;
 		let desiredForce = createVector();
-		if (this.position.x < perceptionRadius) {
-			desiredForce = new p5.Vector(this.maxSpeed, this.velocity.y);
-		} else if (this.position.x > width - perceptionRadius) {
-			desiredForce = new p5.Vector(-this.maxSpeed, this.velocity.y);
-		}
-		if (this.position.y < perceptionRadius) {
-			desiredForce = new p5.Vector(this.velocity.x, this.maxSpeed);
-		} else if (this.position.y > height - perceptionRadius) {
-			desiredForce = new p5.Vector(this.velocity.x, -this.maxSpeed);
+		
+
+		if (edges == false) { // edges off
+			if (this.position.x > width) {
+				this.position.x = 0;
+			} else if (this.position.x < 0) {
+				this.position.x = width
+			}
+			
+			if (this.position.y > height) {
+				this.position.y = 0;
+			} else if (this.position.y < 0) {
+				this.position.y = height
+			}
+		} else { // edges on
+			if (this.position.x < perceptionRadius) {
+				desiredForce = new p5.Vector(this.maxSpeed, this.velocity.y);
+			} else if (this.position.x > width - perceptionRadius) {
+				desiredForce = new p5.Vector(-this.maxSpeed, this.velocity.y);
+			}
+			if (this.position.y < perceptionRadius) {
+				desiredForce = new p5.Vector(this.velocity.x, this.maxSpeed);
+			} else if (this.position.y > height - perceptionRadius) {
+				desiredForce = new p5.Vector(this.velocity.x, -this.maxSpeed);
+			}
+
+			if (desiredForce.x != 0 || desiredForce.y != 0) {
+				desiredForce.setMag(this.maxSpeed);
+				desiredForce.sub(this.velocity);
+				desiredForce.limit(this.maxForce*1.35); // maxForce. Should be higher than the other forces
+				this.acceleration.add(desiredForce);
+			}	
 		}
 
-		if (desiredForce.x != 0 || desiredForce.y != 0) {
-			desiredForce.setMag(this.maxSpeed);
-			desiredForce.sub(this.velocity);
-			desiredForce.limit(this.maxForce*1.35); // maxForce. Should be higher than the other forces
-			this.acceleration.add(desiredForce);
-		}	
+
 	}
 
 	align (flock) {
@@ -62,6 +79,7 @@ class Boid {
 		let perceptionCount = 5;
 		let desiredForce = createVector(); //average
 		let total = 0; 
+		let maxForce = 0.4;
 		for (const other of quadTree.getItemsInRadius(this.position.x, this.position.y, perceptionRadius, perceptionCount)) {
 				desiredForce.add(other.velocity);	
 				total ++;		
@@ -72,7 +90,7 @@ class Boid {
 			desiredForce.div(total);
 			desiredForce.setMag(this.maxSpeed);
 			desiredForce.sub(this.velocity);
-			desiredForce.limit(this.maxForce);
+			desiredForce.limit(maxForce);
 		}
 
 		return desiredForce;
@@ -81,8 +99,9 @@ class Boid {
 
 	cohesion (flock) {
 		let perceptionRadius = 100; //distance to other boids taken into account for alignment
-		let perceptionCount = 5;
+		let perceptionCount = 4;
 		let desiredForce = createVector(); //average
+		let maxForce = 0.40;
 		let total = 0; 
 		for (const other of quadTree.getItemsInRadius(this.position.x, this.position.y, perceptionRadius, perceptionCount)) {
 				desiredForce.add(other.position);
@@ -94,7 +113,7 @@ class Boid {
 			desiredForce.sub(this.position);
 			desiredForce.setMag(this.maxSpeed);
 			desiredForce.sub(this.velocity);
-			desiredForce.limit(this.maxForce);
+			desiredForce.limit(maxForce);
 		}
 
 		return desiredForce;
@@ -103,14 +122,15 @@ class Boid {
 
 	separation (flock) {
 		let perceptionRadius = this.perceptionRadius; //distance to other boids taken into account for alignment
-		let perceptionCount = 5;
+		let perceptionCount = 8;
 		let desiredForce = createVector(); //average
 		let total = 0; 
+		let maxForce = 0.49;
 		for (const other of quadTree.getItemsInRadius(this.position.x, this.position.y, perceptionRadius, perceptionCount)) {
 			const diffToOther = p5.Vector.sub(this.position, other.position);
 			const diffToOtherLength = diffToOther.mag();
-			if (diffToOtherLength === 0) continue;
-			diffToOther.div(diffToOtherLength*diffToOtherLength); // invert the direction
+			if (diffToOtherLength === 0) continue; // probably other == self
+			diffToOther.div(diffToOtherLength**2); // boids far away are less important
 			desiredForce.add(diffToOther);	
 			total ++;		
 		}
@@ -120,7 +140,7 @@ class Boid {
 			desiredForce.div(total);
 			desiredForce.setMag(this.maxSpeed);
 			desiredForce.sub(this.velocity);
-			desiredForce.limit(this.maxForce);
+			desiredForce.limit(maxForce);
 		}
 
 		return desiredForce;
@@ -132,7 +152,7 @@ class Boid {
 		let alignment = this.align(flock);
 		let cohesion = this.cohesion(flock);
 		let separation = this.separation(flock);
-		//let avoidEdge = this.edges();
+		
 		
 		alignment.mult(alignmentSlider.value());
 		cohesion.mult(cohesionSlider.value());
@@ -159,32 +179,43 @@ class Boid {
 	}
 
 	show() {
-		
-		let theta = this.velocity.heading() + radians(90);
+		// strokeWeight(this.size);
+		// stroke(this.color);
+		// point(this.position.x, this.position.y);
+
+		// triangle
+		let r = 7;
+        let theta = this.velocity.heading() + radians(90);
+        let shadowdepth = 10;
+        
+		//shadow
 		push();
-		translate(this.position.x-this.shadowDepth, this.position.y+this.shadowDepth);
-		rotate(theta);
-		beginShape();
-		noStroke();
-		fill(0,15);
-		vertex(0, -this.r*2);
-		vertex(-this.r, this.r);
-		vertex(this.r, this.r);
-		endShape(CLOSE);
-		pop();
-	
-		push();
-		translate(this.position.x, this.position.y);
-		rotate(theta)
-		beginShape();
-		stroke(255,150);
-		strokeWeight(2);
-		fill(255,50);
-		vertex(0, -this.r * 2);
-		vertex(-this.r, this.r );
-		vertex(this.r, this.r );
-		endShape(CLOSE);
-		pop();
+        translate(this.position.x-shadowdepth, this.position.y+shadowdepth);
+        rotate(theta);
+        beginShape();
+        noStroke();
+        fill(0,30);
+        vertex(0, -r * 2);
+        vertex(-r*1.25, r );
+        vertex(0, r/2 );
+		vertex(r*1.25, r );
+        endShape(CLOSE);
+        pop();
+
+		//triangle body
+        push();
+        translate(this.position.x, this.position.y);
+        rotate(theta)
+        beginShape();
+        stroke(0, 50);
+        strokeWeight(1);
+        fill(this.color);
+        vertex(0, -r * 2);
+        vertex(-r*1.25, r );
+        vertex(0, r/2 );
+		vertex(r*1.25, r );
+        endShape(CLOSE);
+        pop();
 		this.tailrender();
 	}
 
@@ -259,18 +290,20 @@ class Arm{
 	}
 
 	render(){
-		stroke(7,48,42);
+		//stroke(7,48,42);
+		stroke(255, 255, 255);
 		strokeWeight(1.5);
+		
 		line(this.x, this.y, this.getEndX(), this.getEndY());
-	   //  stroke(7,48,42,25);
-	   //  line(this.x-25, this.y+25, this.getEndX()-25, this.getEndY()+25);
+		//  stroke(7,48,42,25);
+		//  line(this.x-25, this.y+25, this.getEndX()-25, this.getEndY()+25);
+
+
+	}
    
-   
-	 }
-   
-	 update(){
-	   this.getEndX();
-	   this.getEndY();
-	   this.render();
-	 }
+	update(){
+	this.getEndX();
+	this.getEndY();
+	this.render();
+	}
 }
