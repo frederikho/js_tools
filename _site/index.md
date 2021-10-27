@@ -1,10 +1,10 @@
-## Welcome to my extremely interesting and useful Website
+## Welcome to my extremely interesting and useful website
 
 I have developed some scripts for everyone to enjoy them. Have a look and enjoy. 
 
 My first script in javascript is the following: [Link](universe.html). 
 
-My second script in javascript is this one: [Link](swanky_swarm.html). 
+My second script in javascript is this one: [Swanky Swarm](swanky_swarm.html). 
 
 <script src="{{ base.url | prepend: site.url }}/p5/p5.min.js"></script>
 <script src="{{ base.url | prepend: site.url }}/p5/addons/p5.sound.min.js"></script>
@@ -15,7 +15,7 @@ My second script in javascript is this one: [Link](swanky_swarm.html).
 
 ### Markdown
 
-This page has been created in Markdown. Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for Syntax highlighted code block. Here is an example:
+This page would be very empty without more information. Therefore, let me tell you that this page has been created in Markdown. Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for Syntax highlighted code block. Here is an example:
 
 ```markdown
 # Header 1
