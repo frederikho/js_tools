@@ -1,25 +1,28 @@
 class Boid {
-	constructor() {
+	constructor(x, y) {
+		
 		let randomSeed = random(0.0, 1.0);
 		let randomSeed2 = random(0.0, 1.0);
 		let randomSeed3 = random(0.0, 1.0);
 
-		this.arms = [];
-		this.lastarm = null;
-		this.position = createVector(random(width), random(height));
-		this.velocity = p5.Vector.random2D(); // more like the direction. Sollte ich ändern. #*
+		this.id = flock.length;
+		this.position = createVector(x, y);
 		
-		this.initSpeed = getRandomVal(randomSeed, 1, 4)
-		this.velocity.setMag(this.initSpeed);
+		this.velocity = p5.Vector.random2D(); // more like the direction. Sollte ich ggf ändern. #*
+		this.velocity.setMag(this.maxSpeed);
 		this.acceleration = createVector();
+		this.accelerationBuffer = createVector();
 		this.size = 12;
-		this.color = color(random(110, 255),51,51); // Rottöne, not aligned with random
-		this.maxSpeed = 3; 	
+		this.color = color(getRandomVal(randomSeed, 110, 255),51,51); // Rottöne, aligned with random
+		this.maxSpeedInit = getRandomVal(randomSeed, 2, 2);
+
+		this.maxSpeed = this.maxSpeedInit;
 		
 		this.initPerceptionRadius = 60;
 		this.perceptionRadius = this.initPerceptionRadius;
 
 		this.shadowDepth = 20; // #* implementieren
+		this.path = [[this.position, this.velocity]];
 
 		// this.tail = new Tail(
 		// 	this.position.x,
@@ -35,7 +38,7 @@ class Boid {
 
 	edges () {
 
-		let perceptionRadius = 25;
+		let perceptionRadius = 10;
 		let desiredForce = createVector();
 		
 
@@ -66,7 +69,7 @@ class Boid {
 			if (desiredForce.x != 0 || desiredForce.y != 0) {
 				desiredForce.setMag(this.maxSpeed);
 				desiredForce.sub(this.velocity);
-				desiredForce.limit(this.maxForce*1.35); // maxForce. Should be higher than the other forces
+				desiredForce.limit(this.maxForce*1.25); // maxForce. Should be higher than the other forces
 				this.acceleration.add(desiredForce);
 			}	
 		}
@@ -74,15 +77,17 @@ class Boid {
 
 	}
 
-	align (flock) {
+	align () {
 		let perceptionRadius = this.perceptionRadius; //distance to other boids taken into account for alignment
 		let perceptionCount = 5;
 		let desiredForce = createVector(); //average
 		let total = 0; 
 		let maxForce = 0.4;
 		for (const other of quadTree.getItemsInRadius(this.position.x, this.position.y, perceptionRadius, perceptionCount)) {
-				desiredForce.add(other.velocity);	
-				total ++;		
+				if (other != this) {
+					desiredForce.add(other.velocity);	
+					total ++;		
+				}
 			}
 		
 		
@@ -97,15 +102,17 @@ class Boid {
 		
 	}
 
-	cohesion (flock) {
+	cohesion () {
 		let perceptionRadius = 100; //distance to other boids taken into account for alignment
 		let perceptionCount = 4;
 		let desiredForce = createVector(); //average
 		let maxForce = 0.40;
 		let total = 0; 
 		for (const other of quadTree.getItemsInRadius(this.position.x, this.position.y, perceptionRadius, perceptionCount)) {
-				desiredForce.add(other.position);
-				total ++;
+				if (other != this) {
+					desiredForce.add(other.position);
+					total ++;
+				}
 			}		
 		
 		if (total > 0) {
@@ -120,19 +127,21 @@ class Boid {
 		
 	}	
 
-	separation (flock) {
+	separation () {
 		let perceptionRadius = this.perceptionRadius; //distance to other boids taken into account for alignment
 		let perceptionCount = 8;
 		let desiredForce = createVector(); //average
 		let total = 0; 
 		let maxForce = 0.49;
 		for (const other of quadTree.getItemsInRadius(this.position.x, this.position.y, perceptionRadius, perceptionCount)) {
-			const diffToOther = p5.Vector.sub(this.position, other.position);
-			const diffToOtherLength = diffToOther.mag();
-			if (diffToOtherLength === 0) continue; // probably other == self
-			diffToOther.div(diffToOtherLength**2); // boids far away are less important
-			desiredForce.add(diffToOther);	
-			total ++;		
+			if (other != this) {
+				const diffToOther = p5.Vector.sub(this.position, other.position);
+				const diffToOtherLength = diffToOther.mag();
+				if (diffToOtherLength === 0) continue; // probably other == self
+				diffToOther.div(diffToOtherLength**2); // boids far away are less important
+				desiredForce.add(diffToOther);	
+				total ++;		
+			}
 		}
 	
 		
@@ -156,38 +165,93 @@ class Boid {
 		
 		alignment.mult(alignmentSlider.value());
 		cohesion.mult(cohesionSlider.value());
-		separation.mult(separationSlider.value());
+		separation.mult(separationSlider.value());		
 		
 		
-
 		this.acceleration.add(alignment);
 		this.acceleration.add(cohesion);
 		this.acceleration.add(separation);
-		//this.acceleration.add(avoidEdge);
 		
 
 	}
 
-	update(){
-		this.velocity.add(this.acceleration);
-		this.velocity.limit(this.maxSpeed);
-		this.position.add(this.velocity);
-		this.acceleration.mult(0);
+	update() {
 
+		if (this.acceleration.mag() > 0) {
+			this.velocity.add(this.acceleration);
+			this.acceleration.mult(0);
+		}
+		
+		this.velocity.limit(this.maxSpeed);
+		this.position.add(this.velocity); 
+		
+		if (frameCount%5 == 0) { // every 5th frame
+			this.path.push([this.position.copy(), this.velocity.copy()]);
+			while (this.path.length > 20) {
+				this.path.shift();
+			}
+		}
+		
 		//this.perceptionRadius = this.initPerceptionRadius * perceptionRadiusSlider.value();
 		
 	}
 
-	show() {
+	show () {
+		const dec = 0;
+		let theta;
+		let r = 7;
+		let shadowdepth = 10;
+		
+		// circles
 		// strokeWeight(this.size);
 		// stroke(this.color);
 		// point(this.position.x, this.position.y);
+		
 
-		// triangle
-		let r = 7;
-        let theta = this.velocity.heading() + radians(90);
-        let shadowdepth = 10;
-        
+		let pathItemPosition;
+		let pathItemVelocity;
+		let pathItemColor = this.color;
+		this.path.forEach(function (item, index) {
+			// item[0] is position, item[1] is velocity 
+			pathItemPosition = item[0];
+			pathItemVelocity = item[1];
+			theta = pathItemVelocity.heading() + radians(90);
+
+			// triangle
+			//shadow
+			push();
+			translate(pathItemPosition.x-shadowdepth, pathItemPosition.y+shadowdepth);
+			rotate(theta);
+			beginShape();
+			noStroke();
+			fill(0,30);
+			vertex(0, -r * 2);
+			vertex(-r*1.25, r );
+			vertex(0, r/2 );
+			vertex(r*1.25, r );
+			endShape(CLOSE);
+			pop();
+
+			//triangle body
+			push();
+			translate(pathItemPosition.x, pathItemPosition.y);
+			rotate(theta)
+			beginShape();
+			stroke(0, 50);
+			strokeWeight(1);
+			fill(pathItemColor);
+			vertex(0, -r * 2);
+			vertex(-r*1.25, r );
+			vertex(0, r/2 );
+			vertex(r*1.25, r );
+			endShape(CLOSE);
+			pop();
+		  });
+
+		
+		theta = this.velocity.heading() + radians(90);
+
+        // triangle
 		//shadow
 		push();
         translate(this.position.x-shadowdepth, this.position.y+shadowdepth);
@@ -216,94 +280,10 @@ class Boid {
 		vertex(r*1.25, r );
         endShape(CLOSE);
         pop();
-		this.tailrender();
-	}
-
-	addArm(length){
-		var arm = new Arm(0,0,length,0);
-		if(this.lastarm){
-	
-		  arm.x = this.lastarm.getEndX();
-		  arm.y = this.lastarm.getEndY();
-		  arm.parent = this.lastarm;
-	
-		}else{
-		  arm.x = this.x;
-		  arm.y = this.y;
-		}
-		  this.arms.push(arm);
-		  this.lastarm = arm;
-	}
-	//-------------draw tail;
-	tailrender(){
-
-		for(var i = 0; i < this.arms.length; i++){
-		this.arms[i].render();
-		}
-	}
-
-	drag(x, y){
-
-		this.lastarm.drag(x, y);
-	}
-}
-
-class Arm{
-
-	constructor(x,y,length,angle){
-		this.x = x;
-		this.y = y;
-		this.length = length;
-		this.angle = angle;
-		this.parent = null;
-  
-	  this.shadowDepth = 25;
-  
-  
-	}
-  
-	getEndX(){
-		return this.x + cos(this.angle) * this.length;
-	}
-  
-	getEndY(){
-		return this.y + sin(this.angle) * this.length;
-	}
-  
-	pointAt(x, y) {
-	  let dx = x - this.x;
-	  let dy = y - this.y;
-	  this.angle = atan2(dy, dx);
-	}
-  
-	drag(x, y){
-  
-	   this.pointAt(x, y);
-	   this.x = x - cos(this.angle) * this.length;
-	   this.y = y - sin(this.angle) * this.length;
-	   if (this.parent) {
-  
-		  this.parent.drag(this.x, this.y);
-  
-		}
-  
-	}
-
-	render(){
-		//stroke(7,48,42);
-		stroke(255, 255, 255);
-		strokeWeight(1.5);
 		
-		line(this.x, this.y, this.getEndX(), this.getEndY());
-		//  stroke(7,48,42,25);
-		//  line(this.x-25, this.y+25, this.getEndX()-25, this.getEndY()+25);
+
+		
+	}
 
 
-	}
-   
-	update(){
-	this.getEndX();
-	this.getEndY();
-	this.render();
-	}
 }

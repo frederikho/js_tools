@@ -4,16 +4,6 @@ const flock = [];
 let quadTree;
 let alignmentSlider, cohesionSlider, separationSlider, perceptionRadiusSlider;
 
-let leafblack;
-let leafblack02;
-let leafblack02shadow;
-let leafwhite01;
-let leafline;
-let leaflineShadow;
-let leafsmall01;
-let leafsmall02;
-let shadowdepth = 80;
-let frogleaf;
 let edges = false;
 let mouseIsPressed;
 let velocity = p5.Vector.random2D();
@@ -25,19 +15,20 @@ function setup () {
 
     // const verly = new Verly(16, canvas, ctx);
     quadTree = new QuadTree(Infinity, 30, new Rect(0, 0, width, height));
-    for (let i = 0; i < 82; i++){
-        flock.push(new Boid());
-        flock[i].addArm(3); // what does this do?
+    for (let i = 0; i < 1; i++){
+        flock.push(new Boid(random(width), random(height)));
     }
     
     
     frogleaf = new FrogLeaf(windowWidth*0.45,windowHeight*0.85,14,0.6);
     
-    alignmentSlider = createSlider(0.5, 2, 0.8, 0.1);
+    maxSpeedSlider = createSlider(0.001, 2.501, 1, 0.1);
+    maxSpeedSlider.position(90,windowHeight-180);
+    alignmentSlider = createSlider(0, 1.5, 0.8, 0.1);
     alignmentSlider.position(90,windowHeight-150);
-    cohesionSlider = createSlider(0, 1, 0.55, 0.1);
+    cohesionSlider = createSlider(0, 1.5, 0.55, 0.1);
     cohesionSlider.position(90,windowHeight-120);
-    separationSlider = createSlider(0, 1, 0.6, 0.1);
+    separationSlider = createSlider(0, 1.5  , 0.6, 0.1);
     separationSlider.position(90,windowHeight-90);
     
     edgesCheckbox = createCheckbox('', false);
@@ -60,50 +51,67 @@ function draw () {
     //quadTree.debugRender();
 
     for (let boid of flock) {
-        boid.flockBehaviour(flock);
+        boid.flockBehaviour();
         boid.edges();
         boid.update();
-        boid.show();    
+        boid.show();  
     }
 
     //----background
-    
-    // big triangle center shadow
+    let shadowdepth = 80;
+    let r = 150;
+    // big triangle shadows
     push();
-    translate(680-shadowdepth, -55+shadowdepth);
+    translate(1050-shadowdepth, 120+shadowdepth);
     beginShape();
-    rotate(-0.4);
+    rotate(-2.2);
     noStroke();
     fill(0,30);
-    vertex(0, 400*1.2);
-    vertex(250*1.2, 0);
-    vertex(500*1.2, 400*1.2);
+    vertex(0, -r * 2);
+    vertex(-r*1.25, r );
+    vertex(0, r/2 );
+    vertex(r*1.25, r );
     endShape(CLOSE);
     pop();
 
-    // big triangle center
     push();
-    translate(680, -55);
+    translate(1450-shadowdepth, 280+shadowdepth);
     beginShape();
-    rotate(-0.4);
+    rotate(-1.9);
+    noStroke();
+    fill(0,30);
+    vertex(0, -r * 2);
+    vertex(-r*1.25, r );
+    vertex(0, r/2 );
+    vertex(r*1.25, r );
+    endShape(CLOSE);
+    pop();
+
+    // big triangles
+    push();
+    translate(1050, 120);
+    beginShape();
+    rotate(-2.2);
     noStroke();
     fill(175,51,51,150);
-    vertex(0, 400*1.2);
-    vertex(250*1.2, 0);
-    vertex(500*1.2, 400*1.2);
+    vertex(0, -r * 2);
+    vertex(-r*1.25, r );
+    vertex(0, r/2 );
+    vertex(r*1.25, r );
     endShape(CLOSE);
     pop();
     
-    // big triangle top right
+    //
     push();
-    translate(-140, -10);
+    translate(1450, 280);
     beginShape();
-    rotate(-0.8);
+    rotate(-1.9);
     noStroke();
     fill(175,51,51,150);
-    vertex(0, 400*0.45);
-    vertex(250*0.45, 0);
-    vertex(500*0.45, 400*0.45);
+    vertex(0, -r * 2);
+    vertex(-r*1.25, r );
+    vertex(0, r/2 );
+    vertex(r*1.25, r );
     endShape(CLOSE);
     pop();
 
@@ -126,46 +134,15 @@ function draw () {
     noStroke();
     fill(255);
     textSize(12);
-    text("alignment", alignmentSlider.x  -75 , alignmentSlider.y + 10);
-    text("separation", alignmentSlider.x  -75 , separationSlider.y + 10);
-    text("cohesion", alignmentSlider.x  -75, cohesionSlider.y + 10);
-    text("edges", edgesCheckbox.x  -75, edgesCheckbox.y + 10);
+    text("speed", maxSpeedSlider.x  -75 , maxSpeedSlider.y + 7);
+    text("alignment", alignmentSlider.x  -75 , alignmentSlider.y + 7);
+    text("cohesion", alignmentSlider.x  -75, cohesionSlider.y + 7);
+    text("separation", alignmentSlider.x  -75 , separationSlider.y + 7);
+    text("edges", edgesCheckbox.x  -75, edgesCheckbox.y + 7);
     //text("Craig Reynold's Boids, Daniel shiffman's nature of code", alignmentSlider.x  -103, windowHeight-140);
     textFont("Helvetica");
     textSize(54);
     //text("Title", alignmentSlider.x  -160 , windowHeight - 165);
-
-    if (mouseIsPressed) {
-        let r = 5;
-        let theta = velocity.heading() + radians(90);
-        let shadowdepth = 10;
-        push();
-        translate(mouseX-shadowdepth, mouseY+shadowdepth);
-        rotate(theta);
-        beginShape();
-        noStroke();
-        fill(150,15);
-        vertex(0, -r*2);
-        vertex(-r, r);
-        vertex(r, r);
-        endShape(CLOSE);
-        pop();
-
-        push();
-        translate(mouseX, mouseY);
-        rotate(theta)
-        beginShape();
-        stroke(255,150);
-        strokeWeight(2);
-        fill(255,50);
-        vertex(0, -r * 2);
-        vertex(-r, r );
-        vertex(r, r );
-        endShape(CLOSE);
-        pop();
-        //tailrender();
-
-    }
 }
 
 function getRandomVal (randomSeed, min, max) {
@@ -174,6 +151,10 @@ function getRandomVal (randomSeed, min, max) {
 
 function mousePressed(){
     mouseIsPressed = true;
+    if (!(mouseX < maxSpeedSlider.x + 160 && mouseY > maxSpeedSlider.y - 5)) {
+        flock.push(new Boid(mouseX, mouseY));
+    }
+    
 }
   
 function mouseReleased() {
@@ -181,9 +162,6 @@ function mouseReleased() {
 }
 
 // to do:
-// spatial division optimisation: quadtree, subdivision
-// interface: max force, max speed, 
-// design
 // obstacles
 // boids with different parameters
 // angualar view of boid. boid wants to keep view empty.
@@ -191,4 +169,3 @@ function mouseReleased() {
 // traces, view radius option
 // mouse interaction, vgl http://1000triangle.com/ https://anuraghazra.dev/parasites/
 // in normale Website integrieren
-// random movements?
