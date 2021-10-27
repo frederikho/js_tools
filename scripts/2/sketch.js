@@ -4,7 +4,8 @@ const flock = [];
 let quadTree;
 let alignmentSlider, cohesionSlider, separationSlider, perceptionRadiusSlider;
 
-let edges = false;
+let edgesActive = false;
+let tracesActive = false;
 let mouseIsPressed;
 let velocity = p5.Vector.random2D();
 
@@ -15,7 +16,7 @@ function setup () {
 
     // const verly = new Verly(16, canvas, ctx);
     quadTree = new QuadTree(Infinity, 30, new Rect(0, 0, width, height));
-    for (let i = 0; i < 1; i++){
+    for (let i = 0; i < 3; i++){
         flock.push(new Boid(random(width), random(height)));
     }
     
@@ -34,10 +35,11 @@ function setup () {
     edgesCheckbox = createCheckbox('', false);
     edgesCheckbox.changed(activateEdges);
     edgesCheckbox.position(90,windowHeight-60);
-}
 
-function activateEdges () {
-    edges = !edges;
+    tracesCheckbox = createCheckbox('', false);
+    tracesCheckbox.changed(activateTraces);
+    tracesCheckbox.position(90,windowHeight-30);
+    tracesCheckbox.hide();
 }
 
 function draw () {
@@ -54,6 +56,7 @@ function draw () {
         boid.flockBehaviour();
         boid.edges();
         boid.update();
+        boid.traces();
         boid.show();  
     }
 
@@ -139,6 +142,7 @@ function draw () {
     text("cohesion", alignmentSlider.x  -75, cohesionSlider.y + 7);
     text("separation", alignmentSlider.x  -75 , separationSlider.y + 7);
     text("edges", edgesCheckbox.x  -75, edgesCheckbox.y + 7);
+    //text("traces", tracesCheckbox.x  -75, tracesCheckbox.y + 7);
     //text("Craig Reynold's Boids, Daniel shiffman's nature of code", alignmentSlider.x  -103, windowHeight-140);
     textFont("Helvetica");
     textSize(54);
@@ -150,22 +154,39 @@ function getRandomVal (randomSeed, min, max) {
 }
 
 function mousePressed(){
-    mouseIsPressed = true;
-    if (!(mouseX < maxSpeedSlider.x + 160 && mouseY > maxSpeedSlider.y - 5)) {
-        flock.push(new Boid(mouseX, mouseY));
+    if (mouseButton === LEFT) {
+        mouseIsPressed = true;
+        if (!(mouseX < maxSpeedSlider.x + 160 && mouseY > maxSpeedSlider.y - 5)) {
+            flock.push(new Boid(mouseX, mouseY));
+        }
     }
-    
 }
   
 function mouseReleased() {
-    mouseIsPressed = false;
+    if (mouseButton === LEFT) {
+        mouseIsPressed = false;
+    }
+}
+
+
+function activateEdges () {
+    edgesActive = !edgesActive;
+}
+
+function activateTraces () {
+    tracesActive = !tracesActive;
+    for (let boid of flock){
+        if (tracesActive == false) {
+            boid.traceLength = 0;
+        } else {
+            boid.traceLength = 20;
+        }
+    }   
 }
 
 // to do:
 // obstacles
-// boids with different parameters
-// angualar view of boid. boid wants to keep view empty.
 // submit link to coding challenge
-// traces, view radius option
-// mouse interaction, vgl http://1000triangle.com/ https://anuraghazra.dev/parasites/
+// view radius option
 // in normale Website integrieren
+// flockbehaviour should also affect bois on the other half of the screen (when boids are teleported)

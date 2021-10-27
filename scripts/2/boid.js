@@ -13,8 +13,8 @@ class Boid {
 		this.acceleration = createVector();
 		this.accelerationBuffer = createVector();
 		this.size = 12;
-		this.color = color(getRandomVal(randomSeed, 110, 255),51,51); // Rottöne, aligned with random
-		this.maxSpeedInit = getRandomVal(randomSeed, 2, 2);
+		this.color = color(getRandomVal(randomSeed, 110, 255),51,51); // red, aligned with randomSeed
+		this.maxSpeedInit = getRandomVal(randomSeed, 2, 3); // red, aligned with randomSeed
 
 		this.maxSpeed = this.maxSpeedInit;
 		
@@ -22,7 +22,14 @@ class Boid {
 		this.perceptionRadius = this.initPerceptionRadius;
 
 		this.shadowDepth = 20; // #* implementieren
-		this.path = [[this.position, this.velocity]];
+		this.trace = [[this.position, this.velocity]];
+		
+		if (tracesActive == false) {
+			this.traceLength = 0;
+		} else {
+			this.traceLength = 20;
+		}
+		
 
 		// this.tail = new Tail(
 		// 	this.position.x,
@@ -42,7 +49,7 @@ class Boid {
 		let desiredForce = createVector();
 		
 
-		if (edges == false) { // edges off
+		if (edgesActive == false) { // edges off
 			if (this.position.x > width) {
 				this.position.x = 0;
 			} else if (this.position.x < 0) {
@@ -177,22 +184,23 @@ class Boid {
 
 	update() {
 
-		if (this.acceleration.mag() > 0) {
-			this.velocity.add(this.acceleration);
-			this.acceleration.mult(0);
-		}
-		
+		this.velocity.add(this.acceleration);
+		this.acceleration.mult(0);
 		this.velocity.limit(this.maxSpeed);
-		this.position.add(this.velocity); 
-		
-		if (frameCount%5 == 0) { // every 5th frame
-			this.path.push([this.position.copy(), this.velocity.copy()]);
-			while (this.path.length > 20) {
-				this.path.shift();
-			}
-		}
+		this.position.add(this.velocity.copy().mult(maxSpeedSlider.value())); 
 		
 		//this.perceptionRadius = this.initPerceptionRadius * perceptionRadiusSlider.value();
+		
+	}
+
+	traces() {
+
+		if (frameCount%5 == 0) { // every 5th frame
+			this.trace.push([this.position.copy(), this.velocity.copy()]); // adds a new element
+			while (this.trace.length > this.traceLength) {
+				this.trace.shift(); // removes the first element
+			}
+		}
 		
 	}
 
@@ -207,51 +215,13 @@ class Boid {
 		// stroke(this.color);
 		// point(this.position.x, this.position.y);
 		
+		let traceItemPosition;
+		let traceItemVelocity;
+		var traceItemColor = _.cloneDeep(this.color);
+		let traceLength = this.traceLength;
 
-		let pathItemPosition;
-		let pathItemVelocity;
-		let pathItemColor = this.color;
-		this.path.forEach(function (item, index) {
-			// item[0] is position, item[1] is velocity 
-			pathItemPosition = item[0];
-			pathItemVelocity = item[1];
-			theta = pathItemVelocity.heading() + radians(90);
-
-			// triangle
-			//shadow
-			push();
-			translate(pathItemPosition.x-shadowdepth, pathItemPosition.y+shadowdepth);
-			rotate(theta);
-			beginShape();
-			noStroke();
-			fill(0,30);
-			vertex(0, -r * 2);
-			vertex(-r*1.25, r );
-			vertex(0, r/2 );
-			vertex(r*1.25, r );
-			endShape(CLOSE);
-			pop();
-
-			//triangle body
-			push();
-			translate(pathItemPosition.x, pathItemPosition.y);
-			rotate(theta)
-			beginShape();
-			stroke(0, 50);
-			strokeWeight(1);
-			fill(pathItemColor);
-			vertex(0, -r * 2);
-			vertex(-r*1.25, r );
-			vertex(0, r/2 );
-			vertex(r*1.25, r );
-			endShape(CLOSE);
-			pop();
-		  });
-
-		
+		// Actual position
 		theta = this.velocity.heading() + radians(90);
-
-        // triangle
 		//shadow
 		push();
         translate(this.position.x-shadowdepth, this.position.y+shadowdepth);
@@ -266,7 +236,32 @@ class Boid {
         endShape(CLOSE);
         pop();
 
-		//triangle body
+		// traces shadow
+		this.trace.forEach(function (item, index) {
+			// item[0] is position, item[1] is velocity 
+			traceItemPosition = item[0];
+			traceItemVelocity = item[1];
+			//traceItemColor._array[3] = (index + 1)/traceLength; // setting opacity
+			theta = traceItemVelocity.heading() + radians(90);
+
+			push();
+			translate(traceItemPosition.x-shadowdepth, traceItemPosition.y+shadowdepth);
+			rotate(theta);
+			beginShape();
+			noStroke();
+			fill(0,30);
+			vertex(0, -r * 2);
+			vertex(-r*1.25, r );
+			vertex(0, r/2 );
+			vertex(r*1.25, r );
+			endShape(CLOSE);
+			pop();
+		});
+		
+		// Show actual position
+		// triangle body
+		theta = this.velocity.heading() + radians(90);
+		
         push();
         translate(this.position.x, this.position.y);
         rotate(theta)
@@ -280,9 +275,30 @@ class Boid {
 		vertex(r*1.25, r );
         endShape(CLOSE);
         pop();
-		
 
-		
+		//traces
+		this.trace.forEach(function (item, index) {
+			// item[0] is position, item[1] is velocity 
+			traceItemPosition = item[0];
+			traceItemVelocity = item[1];
+			//	traceItemColor._array[3] = (index + 1)/traceLength; // setting opacity
+			theta = traceItemVelocity.heading() + radians(90);
+
+			//triangle body
+			push();
+			translate(traceItemPosition.x, traceItemPosition.y);
+			rotate(theta)
+			beginShape();
+			stroke(0, traceItemColor._array[3]);
+			strokeWeight(1);
+			fill(traceItemColor);
+			vertex(0, -r * 2);
+			vertex(-r*1.25, r );
+			vertex(0, r/2 );
+			vertex(r*1.25, r );
+			endShape(CLOSE);
+			pop();
+		});
 	}
 
 
