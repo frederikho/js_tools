@@ -1,4 +1,11 @@
 //"use strict" // this code works the modern way. must be in first line
+
+// Created by https://github.com/frederikho/, Okt 2021
+
+// Credits:
+// Inspired by the code of Daniel Shiffman (https://www.youtube.com/watch?v=mhjuuHl6qHM) and june-kyo (1000triangle.com)
+// Idea based on work of Craig Reynolds (https://www.red3d.com/cwr/boids/)
+
 const flock = [];
 
 let quadTree;
@@ -16,7 +23,7 @@ function setup () {
 
     // const verly = new Verly(16, canvas, ctx);
     quadTree = new QuadTree(Infinity, 30, new Rect(0, 0, width, height));
-    for (let i = 0; i < 3; i++){
+    for (let i = 0; i < 42; i++){
         flock.push(new Boid(random(width), random(height)));
     }
     
@@ -136,6 +143,10 @@ function draw () {
     // text 
     noStroke();
     fill(255);
+    textFont("Helvetica");
+    textSize(28);
+    text("Swanky Swarm", maxSpeedSlider.x  -75, maxSpeedSlider.y -23 );
+    
     textSize(12);
     text("speed", maxSpeedSlider.x  -75 , maxSpeedSlider.y + 7);
     text("alignment", alignmentSlider.x  -75 , alignmentSlider.y + 7);
@@ -143,9 +154,7 @@ function draw () {
     text("separation", alignmentSlider.x  -75 , separationSlider.y + 7);
     text("edges", edgesCheckbox.x  -75, edgesCheckbox.y + 7);
     //text("traces", tracesCheckbox.x  -75, tracesCheckbox.y + 7);
-    //text("Craig Reynold's Boids, Daniel shiffman's nature of code", alignmentSlider.x  -103, windowHeight-140);
-    textFont("Helvetica");
-    textSize(54);
+
     //text("Title", alignmentSlider.x  -160 , windowHeight - 165);
 }
 
