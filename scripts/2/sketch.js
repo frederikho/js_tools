@@ -165,15 +165,15 @@ function getRandomVal (randomSeed, min, max) {
 function mousePressed(){
     if (mouseButton === LEFT) {
         mouseIsPressed = true;
-        if (!(mouseX < maxSpeedSlider.x + 160 && mouseY > maxSpeedSlider.y - 5)) {
-            flock.push(new Boid(mouseX, mouseY));
-        }
     }
 }
   
 function mouseReleased() {
     if (mouseButton === LEFT) {
         mouseIsPressed = false;
+        if (!(mouseX < maxSpeedSlider.x + 160 && mouseY > maxSpeedSlider.y - 5)) {
+            flock.push(new Boid(mouseX, mouseY));
+        }
     }
 }
 
