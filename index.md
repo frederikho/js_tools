@@ -6,6 +6,8 @@ My first script in javascript is the following: [Link](universe.html).
 
 My second script in javascript is this one: [Swanky Swarm](swanky_swarm.html). 
 
+My third script in javascript is here: [Triangle game](triangle_game.html). 
+
 <script src="{{ base.url | prepend: site.url }}/p5/p5.min.js"></script>
 <script src="{{ base.url | prepend: site.url }}/p5/addons/p5.sound.min.js"></script>
 <script src="{{ base.url | prepend: site.url }}/boid.js"></script>
