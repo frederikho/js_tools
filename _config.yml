@@ -19,8 +19,8 @@ theme: jekyll-theme-slate
 # You can create any custom variable you would like, and they will be accessible
 # in the templates via {{ site.myvariable }}.
 
-title: Tools which the world still needed
+title: Frederiks projects - overview
 email: coming soon
-description: Funny and extremely useful scripts, developed by me.
+description: Small scripts written for self-education purposes
 github_username:  frederikho
 
